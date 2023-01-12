@@ -6,7 +6,7 @@ from torch.utils.tensorboard import SummaryWriter
 if __name__ == "__main__":
     # Hyperparameters
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    epochs, batch_size, lr = 5, 64, 1e-5
+    epochs, batch_size, lr = 5, 64, 1e-4
     image_size, image_channels = 64, 1
     noise_dim, features_d, features_g = 100, 64, 64
     lambda_gp, critic_iteration = 10, 5
@@ -57,6 +57,7 @@ if __name__ == "__main__":
 
             # critic part
             real = real.to(device)
+            real_size = real.shape[0]
             for i in range(critic_iteration):
                 # input
                 noise = torch.randn(batch_size, noise_dim, 1, 1).to(device)

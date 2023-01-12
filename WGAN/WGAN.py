@@ -57,6 +57,7 @@ if __name__ == "__main__":
 
             # critic part
             real = real.to(device)
+            real_size = real.shape[0]
             for i in range(critic_iteration):
                 # input
                 noise = torch.randn(batch_size, noise_dim, 1, 1).to(device)
