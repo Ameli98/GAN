@@ -61,10 +61,9 @@ def initial_normalize(Model):
 if __name__ == "__main__":
     # Hyperparameters
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    # print(device)
     epochs, batch_size, lr = 5, 128, 2e-4
     image_size, image_channels = 64, 1
-    noise_dim, features_d, features_g = 100, 128, 64
+    noise_dim, features_d, features_g = 100, 64, 64
     transforms = vi.transforms.Compose(
         [
             vi.transforms.Resize((image_size, image_size)),
@@ -125,7 +124,7 @@ if __name__ == "__main__":
             disc_opt.step()
 
             # Genetator part
-            generated_score = disc(fake)
+            generated_score = disc(fake).reshape(-1)
             gen_loss = loss(generated_score, torch.ones_like(generated_score))
             gen_opt.zero_grad()
             gen_loss.backward()
