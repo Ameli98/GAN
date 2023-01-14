@@ -88,7 +88,7 @@ if __name__ == '__main__':
 
             if batch_idx == 0:
                 print(
-                    f"Epoch [{epoch}/{epochs}] Batch {batch_idx}/{len(loader)} \
+                    f"Epoch [{epoch+1}/{epochs}] Batch {batch_idx}/{len(loader)} \
                       Loss D: {loss_disc:.4f}, loss G: {loss_gen:.4f}"
                 )
                 # Testing

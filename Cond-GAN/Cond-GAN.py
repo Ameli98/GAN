@@ -9,7 +9,7 @@ if __name__ == "__main__":
     epochs, batch_size, lr = 5, 64, 1e-4
     image_size, image_channels,  = 64, 1
     noise_dim, features_d, features_g = 100, 64, 64
-    lambda_gp, critic_iteration = 10, 5
+    lambda_gp, critic_iteration = 10, 3
     num_classes, emd_size = 10, 100
     transforms = vi.transforms.Compose(
         [
@@ -85,7 +85,7 @@ if __name__ == "__main__":
             gen_opt.step()
             if batch_index % 100 == 0:
                 print(
-                    f"Epoch {epoch}/{epochs} Batch {batch_index}/{len(loader)} : generator loss = {gen_loss}, critic loss = {critic_loss}")
+                    f"Epoch {epoch+1}/{epochs} Batch {batch_index}/{len(loader)} : generator loss = {gen_loss}, critic loss = {critic_loss}")
                 with torch.inference_mode():
                     test_image = gen(noise, label)
                     test_grid = vi.utils.make_grid(

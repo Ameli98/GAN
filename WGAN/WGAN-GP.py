@@ -82,7 +82,7 @@ if __name__ == "__main__":
             gen_opt.step()
             if batch_index % 100 == 0:
                 print(
-                    f"Epoch {epoch}/{epochs} Batch {batch_index}/{len(loader)} : generator loss = {gen_loss}, critic loss = {critic_loss}")
+                    f"Epoch {epoch+1}/{epochs} Batch {batch_index}/{len(loader)} : generator loss = {gen_loss}, critic loss = {critic_loss}")
                 with torch.inference_mode():
                     test_image = gen(test_noise)
                     test_grid = vi.utils.make_grid(

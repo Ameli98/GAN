@@ -132,7 +132,7 @@ if __name__ == "__main__":
 
             if batch_index % 100 == 0:
                 print(
-                    f"Epoch {epoch}/{epochs} Batch {batch_index}/{len(loader)} : generator loss = {gen_loss}, discriminator loss = {disc_loss}")
+                    f"Epoch {epoch+1}/{epochs} Batch {batch_index}/{len(loader)} : generator loss = {gen_loss}, discriminator loss = {disc_loss}")
 
                 with torch.inference_mode():
                     test_image = gen(test_noise)
