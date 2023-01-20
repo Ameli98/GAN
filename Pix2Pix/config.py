@@ -6,7 +6,8 @@ from pathlib import Path
 device = "cuda" if torch.cuda.is_available() else "cpu"
 train_dir = Path("/mnt/c/Dataset/anime_coloring/train")
 val_dir = Path("/mnt/c/Dataset/anime_coloring/val")
-val_imageset = Path("/colored_image")
+val_imageset_dir = Path("./colored_image")
+val_sample_dir = Path("./sample_image")
 lr = 2e-4
 batch_size = 64
 num_workers = 4

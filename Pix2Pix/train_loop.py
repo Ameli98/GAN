@@ -1,8 +1,9 @@
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
-import pathlib
-from tqdm import tqdm
+from torchvision.utils import make_grid, save_image
+from pathlib import Path
+import tqdm
 import config
 from Discriminator import Discriminator
 from Generator import Generator
@@ -35,3 +36,52 @@ if __name__ == "__main__":
         gen_opt.load_state_dict(checkpoint["gen_opt"])
         for param_group in gen_opt.param_groups:
             param_group["lr"] = config.lr
+
+    if not config.val_imageset_dir.exists():
+        config.val_imageset_dir.mkdir()
+        for index, (colored_image, uncolored_image) in enumerate(val_loader):
+            original_image = make_grid(colored_image)
+            save_image(original_image, config.val_imageset_dir / f"set{index}")
+
+    if not config.val_sample_dir.exists():
+        config.val_sample_dir.mkdir()
+
+    for epoch in tqdm.trange(config.epochs):
+        # Training part
+        for index, (colored_image, uncolored_image) in train_loader:
+            # Discriminator part
+            gen_image = gen(uncolored_image)
+            disc_real = disc(uncolored_image, colored_image)
+            disc_fake = disc(uncolored_image, gen_image)
+            disc_loss = (bceloss_func(disc_real, torch.ones_like(
+                disc_real)) + bceloss_func(disc_fake, torch.zeros_like(disc_fake))) / 2
+            disc.zero_grad()
+            disc_loss.backward(retain_graph=True)
+            disc_opt.step()
+
+            # Generator part
+            disc_real = disc(uncolored_image, colored_image)
+            disc_fake = disc(uncolored_image, gen_image)
+            bceloss = bceloss_func(disc_real, torch.ones_like(
+                disc_real)) + bceloss_func(disc_fake, torch.zeros_like(disc_fake))
+            gen_loss = bceloss + \
+                config.l1_lambda * nn.L1Loss(gen_image, colored_image)
+            gen.zero_grad()
+            gen_loss.backward()
+            gen_opt.step()
+
+        # Validation part
+        for index, (colored_image, uncolored_image) in enumerate(val_loader):
+            with torch.inference_mode():
+                # Record sample of generated image
+                gen_image = gen(uncolored_image)
+                gen_imageset = make_grid(gen_image)
+                save_image(gen_image, f"epoch{epoch}_image{index}.png")
+                # Checkpoint of models
+                model_state = {
+                    "disc_model": disc.state_dict(),
+                    "disc_opt": disc_opt.state_dict(),
+                    "gen_model": gen.state_dict(),
+                    "gen_opt": gen_opt.state_dict(),
+                }
+                torch.save(model_state, config.model_checkpoint)
