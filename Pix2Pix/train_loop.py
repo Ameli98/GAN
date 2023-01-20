@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 from torchvision.utils import make_grid, save_image
-from pathlib import Path
+import logging
 import tqdm
 import config
 from Discriminator import Discriminator
@@ -12,6 +12,7 @@ from dataset import pix2pixDataset
 torch.backends.cudnn.benchmark = True
 
 if __name__ == "__main__":
+    # Basic structure
     disc = Discriminator()
     disc_opt = torch.optim.Adam(
         disc.parameters(), lr=config.lr, betas=(0.5, 0.999))
@@ -25,7 +26,12 @@ if __name__ == "__main__":
     val_dataset = pix2pixDataset(config.val_dir)
     val_loader = DataLoader(val_dataset, config.batch_size,
                             num_workers=config.num_workers)
+    # Logging file
+    logging.basicConfig(filename=config.logfile_name,
+                        level=10, format="%(asctime)s %(message)s")
+    logfile = logging.getLogger()
 
+    # Loading previous model
     if config.load_model:
         checkpoint = torch.load(config.model_checkpoint)
         disc.load_state_dict(checkpoint["disc_model"])
@@ -37,18 +43,25 @@ if __name__ == "__main__":
         for param_group in gen_opt.param_groups:
             param_group["lr"] = config.lr
 
+    # Pre-process for recording sample generated image
     if not config.val_imageset_dir.exists():
         config.val_imageset_dir.mkdir()
         for index, (colored_image, uncolored_image) in enumerate(val_loader):
             original_image = make_grid(colored_image)
-            save_image(original_image, config.val_imageset_dir / f"set{index}")
+            save_image(original_image, config.val_imageset_dir /
+                       f"set{index}.png")
 
     if not config.val_sample_dir.exists():
         config.val_sample_dir.mkdir()
 
+
     for epoch in tqdm.trange(config.epochs):
         # Training part
-        for index, (colored_image, uncolored_image) in train_loader:
+        # Check models' are in the training mode
+
+        logfile.info("Models in training mode") if (
+            disc.training and gen.training) else logfile.error("Models stuck in the eval mode")
+        for index, (colored_image, uncolored_image) in enumerate(train_loader):
             # Discriminator part
             gen_image = gen(uncolored_image)
             disc_real = disc(uncolored_image, colored_image)

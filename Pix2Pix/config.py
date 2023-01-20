@@ -8,6 +8,7 @@ train_dir = Path("/mnt/c/Dataset/anime_coloring/train")
 val_dir = Path("/mnt/c/Dataset/anime_coloring/val")
 val_imageset_dir = Path("./colored_image")
 val_sample_dir = Path("./sample_image")
+logfile_name = Path("logfile.log")
 lr = 2e-4
 batch_size = 64
 num_workers = 4
