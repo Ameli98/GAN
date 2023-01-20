@@ -20,6 +20,7 @@ if __name__ == "__main__":
     gen_opt = torch.optim.Adam(
         gen.parameters(), lr=config.lr, betas=(0.5, 0.999))
     bceloss_func = nn.BCEWithLogitsLoss()
+    l1loss_func = nn.L1Loss()
     train_dataset = pix2pixDataset(config.train_dir)
     train_loader = DataLoader(
         train_dataset, config.batch_size, shuffle=True, num_workers=config.num_workers)
@@ -54,7 +55,6 @@ if __name__ == "__main__":
     if not config.val_sample_dir.exists():
         config.val_sample_dir.mkdir()
 
-
     for epoch in tqdm.trange(config.epochs):
         # Training part
         # Check models' are in the training mode
@@ -78,7 +78,7 @@ if __name__ == "__main__":
             bceloss = bceloss_func(disc_real, torch.ones_like(
                 disc_real)) + bceloss_func(disc_fake, torch.zeros_like(disc_fake))
             gen_loss = bceloss + \
-                config.l1_lambda * nn.L1Loss(gen_image, colored_image)
+                config.l1_lambda * l1loss_func(gen_image, colored_image)
             gen.zero_grad()
             gen_loss.backward()
             gen_opt.step()
