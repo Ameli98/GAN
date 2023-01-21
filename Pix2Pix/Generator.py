@@ -6,13 +6,13 @@ class Generator(nn.Module):
     def __init__(self, in_channel=3, image_channel=3, initial_feature=64):
         super().__init__()
         # Encoder layers
-        self.encoder_list = [
+        self.encoder_list = nn.ModuleList([
             nn.Sequential(
                 nn.Conv2d(in_channel, initial_feature,
                           kernel_size=4, stride=2, padding=1, padding_mode="reflect"),
                 nn.LeakyReLU(0.2),
             )
-        ]
+        ])
         for i in range(1, 7):
             if i <= 3:
                 self.encoder_list.append(
@@ -29,7 +29,7 @@ class Generator(nn.Module):
             nn.LeakyReLU(0.2)
         ))
         # Decoder layers
-        self.decoder_list = [
+        self.decoder_list = nn.ModuleList([
             nn.Sequential(
                 nn.ConvTranspose2d(initial_feature, initial_feature, kernel_size=4,
                                    stride=2, padding=1),
@@ -37,7 +37,7 @@ class Generator(nn.Module):
                 nn.Dropout(),
                 nn.ReLU(),
             )
-        ]
+        ])
         for j in range(1, 4):
             self.decoder_list.append(
                 decoder_block(initial_feature*2, initial_feature)
@@ -109,7 +109,7 @@ class decoder_block(nn.Module):
 
 
 if __name__ == "__main__":
-    gen = Generator(3)
-    test_noise = torch.randn(1, 3, 256, 256)
+    gen = Generator(3).to("cuda")
+    test_noise = torch.randn(1, 3, 256, 256).to("cuda")
     gen_img = gen(test_noise)
     print(gen_img.shape)

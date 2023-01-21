@@ -13,10 +13,10 @@ torch.backends.cudnn.benchmark = True
 
 if __name__ == "__main__":
     # Basic structure
-    disc = Discriminator()
+    disc = Discriminator().to(device=config.device)
     disc_opt = torch.optim.Adam(
         disc.parameters(), lr=config.lr, betas=(0.5, 0.999))
-    gen = Generator()
+    gen = Generator().to(device=config.device)
     gen_opt = torch.optim.Adam(
         gen.parameters(), lr=config.lr, betas=(0.5, 0.999))
     bceloss_func = nn.BCEWithLogitsLoss()
@@ -27,6 +27,8 @@ if __name__ == "__main__":
     val_dataset = pix2pixDataset(config.val_dir)
     val_loader = DataLoader(val_dataset, config.batch_size,
                             num_workers=config.num_workers)
+    # loading bar
+    loop = tqdm.tqdm(train_loader)
     # Logging file
     logging.basicConfig(filename=config.logfile_name,
                         format="%(asctime)s %(levelname)s %(message)s")
@@ -48,20 +50,22 @@ if __name__ == "__main__":
     if not config.val_imageset_dir.exists():
         config.val_imageset_dir.mkdir()
         for index, (colored_image, uncolored_image) in enumerate(val_loader):
-            original_image = make_grid(colored_image)
+            original_image = make_grid(colored_image, nrow=4)
             save_image(original_image, config.val_imageset_dir /
                        f"set{index}.png")
 
     if not config.val_sample_dir.exists():
         config.val_sample_dir.mkdir()
 
-    for epoch in tqdm.trange(config.epochs):
+    for epoch in range(config.epochs):
         # Training part
         # Check models' are in the training mode
 
         if not (disc.training and gen.training):
             logfile.error("Models stuck in the eval mode")
-        for index, (colored_image, uncolored_image) in enumerate(train_loader):
+        for index, (colored_image, uncolored_image) in enumerate(loop):
+            colored_image = colored_image.to(config.device)
+            uncolored_image = uncolored_image.to(config.device)
             # Discriminator part
             gen_image = gen(uncolored_image)
             disc_real = disc(uncolored_image, colored_image)
@@ -83,18 +87,26 @@ if __name__ == "__main__":
             gen_loss.backward()
             gen_opt.step()
 
-            if index % 100 == 0:
-                print(
-                    f"epoch: {epoch}/{config.epochs} batch: {index}/{len(train_loader)}")
-                print(
-                    f"generator loss: {gen_loss} discriminator loss: {disc_loss}")
+            # Update loading bar
+            elapsed = loop.format_dict["elapsed"]
+            rate = loop.format_dict["rate"]
+            remain = (loop.total - loop.n) / \
+                rate if rate and loop.total else 0
+            loop.set_description(
+                f"epoch: {epoch+1}/{config.epochs}")
+            loop.set_postfix(disc_loss=disc_loss.item(),
+                             gen_loss=gen_loss.item(),
+                             elapsed=elapsed,
+                             remain=remain)
 
         # Validation part
         for index, (colored_image, uncolored_image) in enumerate(val_loader):
+            colored_image = colored_image.to(config.device)
+            uncolored_image = uncolored_image.to(config.device)
             with torch.inference_mode():
                 # Record sample of generated image
                 gen_image = gen(uncolored_image)
-                gen_imageset = make_grid(gen_image)
+                gen_imageset = make_grid(gen_image, nrow=4)
                 save_image(gen_image, f"epoch{epoch}_image{index}.png")
                 # Checkpoint of models
                 model_state = {

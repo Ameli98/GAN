@@ -34,7 +34,7 @@ class disc_block(nn.Module):
         super().__init__()
         self.default_layer = nn.Sequential(
             nn.Conv2d(input_channel, output_channel,
-                      kernel_size=4, stride=stride, padding=0, padding_mode="reflect"),
+                      kernel_size=4, stride=stride, padding=0, padding_mode="reflect", bias=False),
             nn.BatchNorm2d(output_channel),
             nn.LeakyReLU(0.2),
         )
