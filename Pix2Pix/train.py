@@ -27,12 +27,10 @@ if __name__ == "__main__":
     val_dataset = pix2pixDataset(config.val_dir)
     val_loader = DataLoader(val_dataset, config.batch_size,
                             num_workers=config.num_workers)
-    # loading bar
-    loop = tqdm.tqdm(train_loader)
     # Logging file
     logging.basicConfig(filename=config.logfile_name,
                         format="%(asctime)s %(levelname)s %(message)s")
-    logfile = logging.getLogger()
+    logfile = logging.getLogger('PIL').setLevel(logging.WARNING)
 
     # Loading previous model
     if config.load_model:
@@ -49,10 +47,10 @@ if __name__ == "__main__":
     # Pre-process for recording sample generated image
     if not config.val_imageset_dir.exists():
         config.val_imageset_dir.mkdir()
-        for index, (colored_image, uncolored_image) in enumerate(val_loader):
-            original_image = make_grid(colored_image, nrow=4)
-            save_image(original_image, config.val_imageset_dir /
-                       f"set{index}.png")
+    for index, (colored_image, uncolored_image) in enumerate(val_loader):
+        original_image = make_grid(colored_image, nrow=4)
+        save_image(original_image, config.val_imageset_dir /
+                   f"set{index}.png")
 
     if not config.val_sample_dir.exists():
         config.val_sample_dir.mkdir()
@@ -60,9 +58,10 @@ if __name__ == "__main__":
     for epoch in range(config.epochs):
         # Training part
         # Check models' are in the training mode
-
         if not (disc.training and gen.training):
             logfile.error("Models stuck in the eval mode")
+        # loading bar
+        loop = tqdm.tqdm(train_loader)
         for index, (colored_image, uncolored_image) in enumerate(loop):
             colored_image = colored_image.to(config.device)
             uncolored_image = uncolored_image.to(config.device)
@@ -88,16 +87,10 @@ if __name__ == "__main__":
             gen_opt.step()
 
             # Update loading bar
-            elapsed = loop.format_dict["elapsed"]
-            rate = loop.format_dict["rate"]
-            remain = (loop.total - loop.n) / \
-                rate if rate and loop.total else 0
             loop.set_description(
                 f"epoch: {epoch+1}/{config.epochs}")
             loop.set_postfix(disc_loss=disc_loss.item(),
-                             gen_loss=gen_loss.item(),
-                             elapsed=elapsed,
-                             remain=remain)
+                             gen_loss=gen_loss.item())
 
         # Validation part
         for index, (colored_image, uncolored_image) in enumerate(val_loader):
@@ -107,7 +100,8 @@ if __name__ == "__main__":
                 # Record sample of generated image
                 gen_image = gen(uncolored_image)
                 gen_imageset = make_grid(gen_image, nrow=4)
-                save_image(gen_image, f"epoch{epoch}_image{index}.png")
+                save_image(gen_image, config.val_sample_dir /
+                           f"image{index}.png")
                 # Checkpoint of models
                 model_state = {
                     "disc_model": disc.state_dict(),
