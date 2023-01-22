@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 from torchvision.utils import make_grid, save_image
-import logging
+# import logging
 import tqdm
 import config
 from Discriminator import Discriminator
@@ -28,9 +28,9 @@ if __name__ == "__main__":
     val_loader = DataLoader(val_dataset, config.batch_size,
                             num_workers=config.num_workers)
     # Logging file
-    logging.basicConfig(filename=config.logfile_name,
-                        format="%(asctime)s %(levelname)s %(message)s")
-    logfile = logging.getLogger('PIL').setLevel(logging.WARNING)
+    # logging.basicConfig(filename=config.logfile_name,
+    #                     format="%(asctime)s %(levelname)s %(message)s")
+    # logfile = logging.getLogger('PIL').setLevel(logging.WARNING)
 
     # Loading previous model
     if config.load_model:
@@ -58,10 +58,10 @@ if __name__ == "__main__":
     for epoch in range(config.epochs):
         # Training part
         # Check models' are in the training mode
-        if not (disc.training and gen.training):
-            logfile.error("Models stuck in the eval mode")
+        # if not (disc.training and gen.training):
+        #     logfile.error("Models stuck in the eval mode")
         # loading bar
-        loop = tqdm.tqdm(train_loader)
+        loop = tqdm.tqdm(train_loader, leave=True)
         for index, (colored_image, uncolored_image) in enumerate(loop):
             colored_image = colored_image.to(config.device)
             uncolored_image = uncolored_image.to(config.device)
@@ -99,6 +99,7 @@ if __name__ == "__main__":
             with torch.inference_mode():
                 # Record sample of generated image
                 gen_image = gen(uncolored_image)
+                gen_image = gen_image * 0.5 + 0.5
                 gen_imageset = make_grid(gen_image, nrow=4)
                 save_image(gen_image, config.val_sample_dir /
                            f"image{index}.png")

@@ -18,9 +18,10 @@ class pix2pixDataset(Dataset):
         # Open  the image
         image_path = self.root_dir / self.image_list[index]
         image = np.array(Image.open(image_path))
+        width = int(image.shape[1] / 2)
         # Split the image
-        colored_image = image[:, :600, :]
-        uncolored_image = image[:, 600:, :]
+        colored_image = image[:, :width, :]
+        uncolored_image = image[:, width:, :]
 
         # Argumentation part
         augmentations = config.both_transform(
