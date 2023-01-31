@@ -100,7 +100,7 @@ if __name__ == "__main__":
                 # Record sample of generated image
                 gen_image = gen(uncolored_image)
                 gen_image = gen_image * 0.5 + 0.5
-                gen_imageset = make_grid(gen_image, nrow=4)
+                gen_image = make_grid(gen_image, nrow=4)
                 save_image(gen_image, config.val_sample_dir /
                            f"image{index}.png")
                 # Checkpoint of models
