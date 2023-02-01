@@ -16,5 +16,6 @@ transform = alb.Compose(
         alb.Normalize(mean=[0.5, 0.5, 0.5], std=[
                       0.5, 0.5, 0.5], max_pixel_value=255),
         alb.pytorch.ToTensorV2(),
-    ]
+    ],
+    additional_targets={"style0": "style1"}
 )
