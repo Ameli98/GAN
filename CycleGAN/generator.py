@@ -4,6 +4,17 @@ from torch import nn
 class generator(nn.Module):
     def __init__(self):
         super().__init__()
+        self.layer_list = nn.ModuleList(
+            [c7s1(3, 64), c3s2(64, 128), c3s2(128, 256)])
+        for i in range(6):
+            self.layer_list.append(ResidualBlock())
+        self.layer_list.extend(nn.ModuleList(
+            [convT(256, 128), convT(128, 64), c7s1(64, 3)]))
+
+    def forward(self, x):
+        for layer in self.layer_list:
+            x = layer(x)
+        return x
 
 
 class instance_relu(nn.Module):
@@ -32,7 +43,7 @@ class c7s1(nn.Module):
 
 
 class ResidualBlock(nn.Module):
-    def __init__(self, in_channel, out_channel):
+    def __init__(self, in_channel=256, out_channel=256):
         super().__init__()
         self.layer = nn.Sequential(
             nn.Conv2d(in_channel, out_channel, 3,
