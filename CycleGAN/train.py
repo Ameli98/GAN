@@ -9,16 +9,20 @@ from discriminator import discriminator
 from dataset import cycleGAN_dataset
 import tqdm
 
-if __name__ == "__main__":
-    gen1 = generator()
-    gen2 = generator()
-    gen_opt = disc_opt = torch.optim.Adam(
-        list(gen1.parameters()) + list(gen2.parameters(), lr=config.lr, betas=(0.5, 0.999)))
+torch.backends.cudnn.benchmark = True
 
-    disc1 = discriminator()
-    disc2 = discriminator()
+if __name__ == "__main__":
+    gen1 = generator().to(config.device)
+    gen2 = generator().to(config.device)
+    gen_opt = disc_opt = torch.optim.Adam(
+        list(gen1.parameters()) + list(gen2.parameters()), lr=config.lr, betas=(0.5, 0.999))
+    gen_scaler = torch.cuda.amp.GradScaler()
+
+    disc1 = discriminator().to(config.device)
+    disc2 = discriminator().to(config.device)
     disc_opt = torch.optim.Adam(
         list(disc1.parameters()) + list(disc2.parameters()), lr=config.lr, betas=(0.5, 0.999))
+    disc_scaler = torch.cuda.amp.GradScaler()
 
     mse = nn.MSELoss()
     l1loss = nn.L1Loss()
@@ -28,38 +32,99 @@ if __name__ == "__main__":
     dataloader = DataLoader(dataset, config.batch_size, shuffle=True)
     loop = tqdm.tqdm(dataloader)
 
+    # loading checkpoint
+    if config.load_model:
+        checkpoint = torch.load(config.model_checkpoint)
+        disc1.load_state_dict(checkpoint["disc1_model"])
+        disc2.load_state_dict(checkpoint["disc2_model"])
+        disc_opt.load_state_dict(checkpoint["disc_opt"])
+        for param_group in disc_opt.param_groups:
+            param_group["lr"] = config.lr
+        gen1.load_state_dict(checkpoint["gen1_model"])
+        gen2.load_state_dict(checkpoint["gen2_model"])
+        gen_opt.load_state_dict(checkpoint["gen_opt"])
+        for param_group in gen_opt.param_groups:
+            param_group["lr"] = config.lr
+    if not config.sample_root.exists():
+        config.sample_root.mkdir()
+        config.sample_gen1.mkdir()
+        config.sample_gen2.mkdir()
+        config.sample_cycle1.mkdir()
+        config.sample_cycle2.mkdir()
+
+    # Training loop
     for epoch in range(config.epochs):
         for index, (image1, image2) in enumerate(loop):
-            gen_image1 = gen1(image2)
-            gen_image2 = gen2(image1)
+            image1 = image1.to("cuda")
+            image2 = image2.to("cuda")
 
-            disc_gen1 = disc1(gen_image1)
-            disc_gen2 = disc2(gen_image2)
-            disc_real1 = disc1(image1)
-            disc_real2 = disc2(image2)
-            disc_loss1 = mse(disc_real1, torch.ones_like(
-                disc_real1)) + mse(disc_gen1, torch.zeros_like(disc_gen1))
-            disc_loss2 = mse(disc_real2, torch.ones_like(
-                disc_real2)) + mse(disc_gen2, torch.zeros_like(disc_gen2))
-            disc_loss = (disc_loss1 + disc_loss2) / 2
+            # discriminator part
+            with torch.cuda.amp.autocast():
+                gen_image1 = gen1(image2)
+                gen_image2 = gen2(image1)
 
-            cycle_image1 = gen1(gen_image2)
-            cycle_image2 = gen2(gen_image1)
-            cycle_loss = l1loss(image1, cycle_image1) + \
-                l1loss(image2, cycle_image2)
+                # adversial loss
+                disc_gen1 = disc1(gen_image1)
+                disc_gen2 = disc2(gen_image2)
+                disc_real1 = disc1(image1)
+                disc_real2 = disc2(image2)
 
-            disc_loss = disc_loss + cycle_loss
-            disc1.zero_grad()
-            disc2.zero_grad()
-            disc_loss.backward(retain_graph=True)
-            disc_opt.step()
+                print("torch.cuda.memory_allocated: %fGB" %
+                      (torch.cuda.memory_allocated(0)/1024/1024/1024))
+                print("torch.cuda.memory_reserved: %fGB" %
+                      (torch.cuda.memory_reserved(0)/1024/1024/1024))
+                print("torch.cuda.max_memory_reserved: %fGB" %
+                      (torch.cuda.max_memory_reserved(0)/1024/1024/1024))
+                disc_real_loss1 = mse(disc_real1, torch.ones_like(disc_real1))
+                disc_fake_loss1 = mse(disc_gen1, torch.zeros_like(disc_gen1))
+                disc_real_loss2 = mse(disc_real2, torch.ones_like(disc_real2))
+                disc_fake_loss2 = mse(disc_gen2, torch.zeros_like(disc_gen2))
+                disc_loss = (disc_real_loss1 + disc_fake_loss1 +
+                             disc_real_loss2 + disc_fake_loss2) / 2
 
-            disc_gen1 = disc1(gen_image1)
-            disc_gen2 = disc2(gen_image2)
-            gen_loss1 = mse(disc_gen1, torch.zeros_like(disc_gen1))
-            gen_loss2 = mse(disc_gen2, torch.zeros_like(disc_gen2))
-            gen_loss = gen_loss1 + gen_loss2
-            gen1.zero_grad()
-            gen2.zero_grad()
-            gen_loss.backward()
-            gen_opt.step()
+            disc_opt.zero_grad()
+            disc_scaler.scale(disc_loss).backward(retain_graph=True)
+            disc_scaler.step(disc_opt)
+            disc_scaler.update()
+
+            # generator part
+            with torch.cuda.amp.autocast():
+                # adversial loss
+                disc_gen1 = disc1(gen_image1)
+                disc_gen2 = disc2(gen_image2)
+                gen_loss1 = mse(disc_gen1, torch.zeros_like(disc_gen1))
+                gen_loss2 = mse(disc_gen2, torch.zeros_like(disc_gen2))
+
+                # cycle loss
+                cycle_image1 = gen1(gen_image2)
+                cycle_image2 = gen2(gen_image1)
+                cycle_loss1 = l1loss(image1, cycle_image1)
+                cycle_loss2 = l1loss(image2, cycle_image2)
+                cycle_loss = cycle_loss1 + cycle_loss2
+
+                gen_loss = gen_loss1 + gen_loss2 + config.lambda_cycle * cycle_loss
+            gen_opt.zero_grad()
+            gen_scaler.scale(gen_loss).backward()
+            gen_scaler.step(gen_opt)
+            gen_scaler.update()
+
+            # Save generated images
+            gen_image1 = gen_image1 * 0.5 + 0.5
+            gen_image2 = gen_image2 * 0.5 + 0.5
+            cycle_image1 = cycle_image1 * 0.5 + 0.5
+            cycle_image2 = cycle_image2 * 0.5 + 0.5
+            save_image(gen_image1, config.sample_gen1 / f"{index}.jpg")
+            save_image(gen_image2, config.sample_gen2 / f"{index}.jpg")
+            save_image(cycle_image1, config.sample_cycle1 / f"{index}.jpg")
+            save_image(cycle_image2, config.sample_cycle2 / f"{index}.jpg")
+
+        # Checkpoint of models
+        model_state = {
+            "disc1_model": disc1.state_dict(),
+            "disc2_model": disc2.state_dict(),
+            "disc_opt": disc_opt.state_dict(),
+            "gen1_model": gen1.state_dict(),
+            "gen2_model": gen2.state_dict(),
+            "gen_opt": gen_opt.state_dict(),
+        }
+        torch.save(model_state, config.model_checkpoint)

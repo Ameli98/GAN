@@ -1,5 +1,7 @@
 from torch import nn
 
+# TODO: fix discriminator's outpus size to [5, 1, 30, 30]
+
 
 class discriminator(nn.Module):
     def __init__(self):
@@ -12,7 +14,8 @@ class discriminator(nn.Module):
             c4s2(256, 512),
         )
         for m in self.modules():
-            nn.init.normal_(m.weight, std=0.02)
+            if isinstance(m, (nn.Conv2d, nn.ConvTranspose2d)):
+                nn.init.normal_(m.weight, std=0.02)
 
     def forward(self, x):
         return self.layer(x)
@@ -30,3 +33,11 @@ class c4s2(nn.Module):
 
     def forward(self, x):
         return self.layer(x)
+
+
+if __name__ == "__main__":
+    import torch
+    x = torch.randn((5, 3, 256, 256))
+    model = discriminator()
+    preds = model(x)
+    print(preds.shape)

@@ -11,7 +11,8 @@ class generator(nn.Module):
         self.layer_list.extend(nn.ModuleList(
             [convT(256, 128), convT(128, 64), c7s1(64, 3)]))
         for m in self.modules():
-            nn.init.normal_(m.weight, std=0.02)
+            if isinstance(m, (nn.Conv2d, nn.ConvTranspose2d)):
+                nn.init.normal_(m.weight, std=0.02)
 
     def forward(self, x):
         for layer in self.layer_list:
@@ -67,15 +68,26 @@ class c3s2(nn.Module):
             instance_relu(out_channel)
         )
 
+    def forward(self, x):
+        return self.layer(x)
+
 
 class convT(nn.Module):
     def __init__(self, in_channel, out_channel):
         super().__init__()
         self.layer = nn.Sequential(
             nn.ConvTranspose2d(in_channel, out_channel, 3,
-                               2, 1, padding_mode="reflect"),
+                               2, 1, 1),
             instance_relu(out_channel),
         )
 
     def forward(self, x):
         return self.layer(x)
+
+
+# if __name__ == "__main__":
+#     import torch
+#     gen = generator().to("cuda")
+#     test_noise = torch.randn(1, 3, 256, 256).to("cuda")
+#     gen_img = gen(test_noise)
+#     print(gen_img.shape)
