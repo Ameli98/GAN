@@ -1,13 +1,22 @@
 import torch
 import albumentations as alb
+from pathlib import Path
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 lr = 2e-4
-lambda_cycle = 10
-lambda_identity = 0
 batch_size = 1
 num_workers = 4
 epochs = 10
+
+lambda_cycle = 10
+lambda_identity = 0
+
+# TODO: dataset path
+dataset_path1 = Path("")
+dataset_path2 = Path("")
+
+model_checkpoint = Path("model.pth.tar")
+load_model = True if model_checkpoint.exists() else False
 
 transform = alb.Compose(
     [
