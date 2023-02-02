@@ -1,3 +1,4 @@
+import torch
 from torch import nn
 
 
@@ -29,7 +30,7 @@ class instance_relu(nn.Module):
         )
 
     def forward(self, x):
-        return self.layer(x)
+        return torch.tanh(self.layer(x))
 
 
 class c7s1(nn.Module):

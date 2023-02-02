@@ -29,7 +29,7 @@ if __name__ == "__main__":
 
     dataset = cycleGAN_dataset(
         config.dataset_path1, config.dataset_path2, config.transform)
-    dataloader = DataLoader(dataset, config.batch_size, shuffle=True)
+    dataloader = DataLoader(dataset, config.batch_size)
     loop = tqdm.tqdm(dataloader)
 
     # loading checkpoint
@@ -55,6 +55,7 @@ if __name__ == "__main__":
     # Training loop
     for epoch in range(config.epochs):
         for index, (image1, image2) in enumerate(loop):
+            loop.set_description(f"Epoch:{epoch+1}/{config.epochs}")
             image1 = image1.to("cuda")
             image2 = image2.to("cuda")
 
@@ -69,12 +70,6 @@ if __name__ == "__main__":
                 disc_real1 = disc1(image1)
                 disc_real2 = disc2(image2)
 
-                print("torch.cuda.memory_allocated: %fGB" %
-                      (torch.cuda.memory_allocated(0)/1024/1024/1024))
-                print("torch.cuda.memory_reserved: %fGB" %
-                      (torch.cuda.memory_reserved(0)/1024/1024/1024))
-                print("torch.cuda.max_memory_reserved: %fGB" %
-                      (torch.cuda.max_memory_reserved(0)/1024/1024/1024))
                 disc_real_loss1 = mse(disc_real1, torch.ones_like(disc_real1))
                 disc_fake_loss1 = mse(disc_gen1, torch.zeros_like(disc_gen1))
                 disc_real_loss2 = mse(disc_real2, torch.ones_like(disc_real2))

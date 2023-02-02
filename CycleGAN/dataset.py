@@ -13,8 +13,13 @@ class cycleGAN_dataset(nn.Module):
         self.image_list2 = list(self.image_root2.iterdir())
         self.transform = transform
 
+        self.image_list1 = self.image_list1[:min(
+            len(self.image_list1), len(self.image_list2))]
+        self.image_list2 = self.image_list2[:min(
+            len(self.image_list1), len(self.image_list2))]
+
     def __len__(self):
-        return len(self.image_list1) + len(self.image_list2)
+        return len(self.image_list1)
 
     def __getitem__(self, index):
         image_path1 = self.image_root1 / \
