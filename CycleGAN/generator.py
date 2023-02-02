@@ -10,6 +10,8 @@ class generator(nn.Module):
             self.layer_list.append(ResidualBlock())
         self.layer_list.extend(nn.ModuleList(
             [convT(256, 128), convT(128, 64), c7s1(64, 3)]))
+        for m in self.modules():
+            nn.init.normal_(m.weight, std=0.02)
 
     def forward(self, x):
         for layer in self.layer_list:

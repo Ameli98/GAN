@@ -11,6 +11,8 @@ class discriminator(nn.Module):
             c4s2(128, 256),
             c4s2(256, 512),
         )
+        for m in self.modules():
+            nn.init.normal_(m.weight, std=0.02)
 
     def forward(self, x):
         return self.layer(x)
