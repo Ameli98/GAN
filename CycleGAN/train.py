@@ -28,7 +28,6 @@ if __name__ == "__main__":
     dataset = cycleGAN_dataset(
         config.dataset_path1, config.dataset_path2, config.transform)
     dataloader = DataLoader(dataset, config.batch_size)
-    loop = tqdm.tqdm(dataloader, ncols=100)
 
     # loading checkpoint
     if config.load_model:
@@ -53,6 +52,7 @@ if __name__ == "__main__":
 
     # Training loop
     for epoch in range(config.epochs):
+        loop = tqdm.tqdm(dataloader, ncols=100)
         for index, (image1, image2) in enumerate(loop):
             loop.set_description(f"Epoch:{epoch+1}/{config.epochs}")
             image1 = image1.to("cuda")
