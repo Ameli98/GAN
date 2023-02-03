@@ -4,7 +4,7 @@ from albumentations.pytorch import ToTensorV2
 from pathlib import Path
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
-lr = 2e-4
+lr = 1e-5
 batch_size = 1
 num_workers = 4
 epochs = 10
@@ -19,7 +19,8 @@ dataset_path2 = Path("/content/cosplay")
 # dataset_path1 = Path("/mnt/c/dataset/WikiArt_ArtMovements/Academic_Art")
 # dataset_path2 = Path("/mnt/c/dataset/cosplay")
 
-sample_root = Path("/mnt/c/Sample/CycleGAN")
+sample_root = Path("/content/Sample")
+# sample_root = Path("/mnt/c/Sample/CycleGAN")
 sample_gen1 = sample_root / "gen1"
 sample_gen2 = sample_root / "gen2"
 sample_cycle1 = sample_root / "cycle1"
