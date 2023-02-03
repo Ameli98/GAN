@@ -10,7 +10,7 @@ class generator(nn.Module):
         for i in range(6):
             self.layer_list.append(ResidualBlock())
         self.layer_list.extend(nn.ModuleList(
-            [convT(256, 128), convT(128, 64), c7s1(64, 3)]))
+            [convT(256, 128), convT(128, 64), c7s1(64, 3), nn.Tanh()]))
         for m in self.modules():
             if isinstance(m, (nn.Conv2d, nn.ConvTranspose2d)):
                 nn.init.normal_(m.weight, std=0.02)
@@ -30,7 +30,7 @@ class instance_relu(nn.Module):
         )
 
     def forward(self, x):
-        return torch.tanh(self.layer(x))
+        return x
 
 
 class c7s1(nn.Module):

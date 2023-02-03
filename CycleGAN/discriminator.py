@@ -12,14 +12,15 @@ class discriminator(nn.Module):
             c4s2(64, 128),
             c4s2(128, 256),
             c4s2(256, 512),
-            nn.Conv2d(512, 1, 3, 1, 1, padding_mode="reflect")
+            nn.Conv2d(512, 1, 3, 1, 1, padding_mode="reflect"),
+            nn.Sigmoid()
         )
         for m in self.modules():
             if isinstance(m, (nn.Conv2d, nn.ConvTranspose2d)):
                 nn.init.normal_(m.weight, std=0.02)
 
     def forward(self, x):
-        return nn.Sigmoid(self.layer(x))
+        return x
 
 
 class c4s2(nn.Module):

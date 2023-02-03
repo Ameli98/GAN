@@ -12,8 +12,8 @@ epochs = 10
 lambda_cycle = 10
 lambda_identity = 0
 
-dataset_path1 = Path("/mnt/c/dataset/Wiki-Art/mythological-painting")
-dataset_path2 = Path("/mnt/c/dataset/Pixiv2020")
+dataset_path1 = Path("/mnt/c/dataset/Wiki-Art/nude-painting-nu")
+dataset_path2 = Path("/mnt/c/dataset/cosplay")
 
 sample_root = Path("/mnt/c/Sample/CycleGAN")
 sample_gen1 = sample_root / "gen1"
