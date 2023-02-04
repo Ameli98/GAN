@@ -16,6 +16,7 @@ lambda_identity = 0
 # dataset_path1 = Path("/content/Academic_Art")
 # dataset_path2 = Path("/content/cosplay")
 # sample_root = Path("/content/Sample")
+# model_checkpoint = Path("/content/drive/MyDrive/Code/CycleGAN/model.pth.tar")
 
 dataset_path1 = Path("/mnt/c/dataset/WikiArt_ArtMovements/Academic_Art")
 dataset_path2 = Path("/mnt/c/dataset/cosplay")

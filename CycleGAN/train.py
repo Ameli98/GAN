@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
-from torchvision.utils import make_grid, save_image
+from torchvision.utils import save_image
 
 import config
 from generator import generator
