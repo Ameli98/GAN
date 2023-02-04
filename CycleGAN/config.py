@@ -4,23 +4,23 @@ from albumentations.pytorch import ToTensorV2
 from pathlib import Path
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
-lr = 1e-5
+lr = 5e-6
 batch_size = 1
 num_workers = 4
-epochs = 30
+epochs = 10
 
 lambda_cycle = 10
 lambda_identity = 0
 
 # For colab
-dataset_path1 = Path("/content/Academic_Art")
-dataset_path2 = Path("/content/cosplay")
+# dataset_path1 = Path("/content/Academic_Art")
+# dataset_path2 = Path("/content/cosplay")
+# sample_root = Path("/content/Sample")
 
-# dataset_path1 = Path("/mnt/c/dataset/WikiArt_ArtMovements/Academic_Art")
-# dataset_path2 = Path("/mnt/c/dataset/cosplay")
+dataset_path1 = Path("/mnt/c/dataset/WikiArt_ArtMovements/Academic_Art")
+dataset_path2 = Path("/mnt/c/dataset/cosplay")
 
-sample_root = Path("/content/Sample")
-# sample_root = Path("/mnt/c/Sample/CycleGAN")
+sample_root = Path("/mnt/c/Sample/CycleGAN")
 sample_gen1 = sample_root / "gen1"
 sample_gen2 = sample_root / "gen2"
 sample_cycle1 = sample_root / "cycle1"
@@ -28,6 +28,8 @@ sample_cycle2 = sample_root / "cycle2"
 
 model_checkpoint = Path("model.pth.tar")
 load_model = True if model_checkpoint.exists() else False
+
+# notification_sound = Path("/mnt/d/SoundEffect/notification.mp3")
 
 transform = alb.Compose(
     [

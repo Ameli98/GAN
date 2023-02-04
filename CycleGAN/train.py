@@ -27,7 +27,8 @@ if __name__ == "__main__":
 
     dataset = cycleGAN_dataset(
         config.dataset_path1, config.dataset_path2, config.transform)
-    dataloader = DataLoader(dataset, config.batch_size, shuffle=True)
+    dataloader = DataLoader(dataset, config.batch_size,
+                            shuffle=True, num_workers=config.num_workers)
 
     # loading checkpoint
     if config.load_model:
