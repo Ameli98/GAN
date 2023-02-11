@@ -84,8 +84,8 @@ if __name__ == "__main__":
             # adversial loss
             disc_gen1 = disc1(gen_image1)
             disc_gen2 = disc2(gen_image2)
-            gen_loss1 = mse(disc_gen1, torch.zeros_like(disc_gen1))
-            gen_loss2 = mse(disc_gen2, torch.zeros_like(disc_gen2))
+            gen_loss1 = - mse(disc_gen1, torch.zeros_like(disc_gen1))
+            gen_loss2 = - mse(disc_gen2, torch.zeros_like(disc_gen2))
 
             # cycle loss
             cycle_image1 = gen1(gen_image2)
