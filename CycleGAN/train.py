@@ -59,26 +59,28 @@ if __name__ == "__main__":
             image1 = image1.to("cuda")
             image2 = image2.to("cuda")
 
-            # discriminator part
             gen_image1 = gen1(image2)
             gen_image2 = gen2(image1)
 
+            # discriminator part
             # adversial loss
-            disc_gen1 = disc1(gen_image1)
-            disc_gen2 = disc2(gen_image2)
-            disc_real1 = disc1(image1)
-            disc_real2 = disc2(image2)
+            # lazy training, which inspired from lazy regulazation in StyleGAN2
+            if (index % 16 == 0) and (epoch > 0):
+                disc_gen1 = disc1(gen_image1)
+                disc_gen2 = disc2(gen_image2)
+                disc_real1 = disc1(image1)
+                disc_real2 = disc2(image2)
 
-            disc_real_loss1 = mse(disc_real1, torch.ones_like(disc_real1))
-            disc_fake_loss1 = mse(disc_gen1, torch.zeros_like(disc_gen1))
-            disc_real_loss2 = mse(disc_real2, torch.ones_like(disc_real2))
-            disc_fake_loss2 = mse(disc_gen2, torch.zeros_like(disc_gen2))
-            disc_loss = (disc_real_loss1 + disc_fake_loss1 +
-                         disc_real_loss2 + disc_fake_loss2) / 2
+                disc_real_loss1 = mse(disc_real1, torch.ones_like(disc_real1))
+                disc_fake_loss1 = mse(disc_gen1, torch.zeros_like(disc_gen1))
+                disc_real_loss2 = mse(disc_real2, torch.ones_like(disc_real2))
+                disc_fake_loss2 = mse(disc_gen2, torch.zeros_like(disc_gen2))
+                disc_loss = (disc_real_loss1 + disc_fake_loss1 +
+                             disc_real_loss2 + disc_fake_loss2) / 2
 
-            disc_opt.zero_grad()
-            disc_loss.backward(retain_graph=True)
-            disc_opt.step()
+                disc_opt.zero_grad()
+                disc_loss.backward(retain_graph=True)
+                disc_opt.step()
 
             # generator part
             # adversial loss
