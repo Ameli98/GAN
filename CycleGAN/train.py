@@ -65,7 +65,7 @@ if __name__ == "__main__":
             # discriminator part
             # adversial loss
             # lazy training, which inspired from lazy regulazation in StyleGAN2
-            if (index % 16 == 0) or (epoch > 0):
+            if epoch % 2 == 0:
                 disc_gen1 = disc1(gen_image1)
                 disc_gen2 = disc2(gen_image2)
                 disc_real1 = disc1(image1)

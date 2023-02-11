@@ -4,10 +4,10 @@ from albumentations.pytorch import ToTensorV2
 from pathlib import Path
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
-lr = 2e-6
+lr = 1e-5
 batch_size = 1
 num_workers = 4
-epochs = 10
+epochs = 50
 
 lambda_cycle = 10
 lambda_identity = 0
