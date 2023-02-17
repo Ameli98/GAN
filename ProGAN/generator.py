@@ -87,5 +87,5 @@ def interpolation(alpha:float, upsampled:torch.Tensor, conved:torch.Tensor):
 if __name__ == "__main__":
     g = Generator()
     x = torch.randn(4, 512, 1, 1)
-    y = g(x, 4, 0.5)
+    y = g(x, 4 , 0.5)
     print(y.shape)
