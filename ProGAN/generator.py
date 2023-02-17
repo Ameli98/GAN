@@ -15,7 +15,7 @@ class Generator(nn.Module):
                     Eqlr_Conv(512, 512),
                     nn.LeakyReLU(0.2),
                     PixNorm(),
-                    ),
+                ),
             ]
         )
         for i in range(3):
@@ -33,19 +33,21 @@ class Generator(nn.Module):
         # Final Tanh
         self.final = nn.Tanh()
 
-    def forward(self, x, phase:int, alpha:float):
+    def forward(self, x, phase: int, alpha: float):
         conved = self.layerlist[0](x)
         if phase == 0:
-            return self.final(conved)
+            conved_RGB = self.RGBlayer[0](conved)
+            return self.final(conved_RGB)
         for step in range(phase):
             upsampled = nn.functional.interpolate(conved, scale_factor=2)
             conved = self.layerlist[step+1](upsampled)
-        upsampled_RGB, conved_RGB = self.RGBlayer[phase](upsampled), self.RGBlayer[phase+1](conved)
+        upsampled_RGB, conved_RGB = self.RGBlayer[phase](
+            upsampled), self.RGBlayer[phase+1](conved)
         return self.final(interpolation(alpha, upsampled_RGB, conved_RGB))
 
 
 class DoubleConv(nn.Module):
-    def __init__(self, in_channel, out_channel, padding=1, pixnorm=True, inv:bool=False) -> None:
+    def __init__(self, in_channel, out_channel, padding=1, pixnorm=True, inv: bool = False) -> None:
         super().__init__()
         mid_channel = in_channel if inv else out_channel
         self.layerlist = nn.ModuleList([
@@ -57,14 +59,16 @@ class DoubleConv(nn.Module):
     def forward(self, x):
         for layer in self.layerlist:
             x = layer(x)
-            x =  self.transform(x)
+            x = self.transform(x)
         return x
+
 
 class Eqlr_Conv(nn.Module):
     def __init__(self, in_channel, out_channel, kernal_size=3, padding=1) -> None:
         super().__init__()
         self.scaler = (2/(in_channel * kernal_size * kernal_size)) ** 0.5
-        self.conv = nn.Conv2d(in_channel, out_channel, kernal_size, padding=padding)
+        self.conv = nn.Conv2d(in_channel, out_channel,
+                              kernal_size, padding=padding)
         nn.init.normal_(self.conv.weight)
         nn.init.zeros_(self.conv.bias)
         self.activation = nn.LeakyReLU(0.2)
@@ -77,15 +81,17 @@ class Eqlr_Conv(nn.Module):
 class PixNorm(nn.Module):
     def __init__(self) -> None:
         super().__init__()
-    
+
     def forward(self, input):
         return input / torch.sqrt(torch.mean(input ** 2, dim=1, keepdim=True) + 1e-8)
 
-def interpolation(alpha:float, upsampled:torch.Tensor, conved:torch.Tensor):
-        return (alpha * conved) + ((1-alpha) * upsampled)
+
+def interpolation(alpha: float, upsampled: torch.Tensor, conved: torch.Tensor):
+    return (alpha * conved) + ((1-alpha) * upsampled)
+
 
 if __name__ == "__main__":
     g = Generator()
     x = torch.randn(4, 512, 1, 1)
-    y = g(x, 4 , 0.5)
+    y = g(x, 4, 0.5)
     print(y.shape)
