@@ -74,13 +74,6 @@ if __name__ == "__main__":
                 loop.set_postfix(disc_loss=d_loss.item(),
                                  gen_loss=g_loss.item())
 
-                # save model
-                model_state = {"g": g.state_dict(),
-                               "g_opt": g_opt.state_dict(),
-                               "d": d.state_dict(),
-                               "d_opt": d_opt.state_dict(),
-                               }
-                torch.save(model_state, cg.model_checkpoint)
                 # save image
                 gen_image = fake * 0.5 + 0.5
                 gen_image = make_grid(gen_image, nrow=2)
@@ -88,3 +81,10 @@ if __name__ == "__main__":
 
             # update alpha
             alpha += 4/cg.epochs
+            # save model
+            model_state = {"g": g.state_dict(),
+                           "g_opt": g_opt.state_dict(),
+                           "d": d.state_dict(),
+                           "d_opt": d_opt.state_dict(),
+                           }
+            torch.save(model_state, cg.model_checkpoint)
