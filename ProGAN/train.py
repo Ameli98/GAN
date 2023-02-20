@@ -20,7 +20,7 @@ if __name__ == "__main__":
     d = Discriminator().to(cg.device)
     d_opt = Adam(d.parameters(), lr=cg.lr, betas=(0, 0.99))
 
-    phase = argv[1] if len(argv) >= 2 else 0
+    phase = int(argv[1]) if len(argv) >= 2 else 0
     # loading model
     if cg.load_model:
         cpt = torch.load(cg.model_checkpoint)

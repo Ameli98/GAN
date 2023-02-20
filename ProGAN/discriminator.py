@@ -50,9 +50,9 @@ class Discriminator(nn.Module):
             return self.ending(input)
         pool = nn.AvgPool2d(2)
         downsampled = pool(input)
-        downsampled_nRGB = self.RGBlayer[8-phase](downsampled)
-        conved_nRGB = self.RGBlayer[7-phase](input)
-        conved_nRGB = pool(self.layerlist[6-phase](conved_nRGB))
+        downsampled_nRGB = self.RGBlayer[7-phase](downsampled)
+        conved_nRGB = self.RGBlayer[6-phase](input)
+        conved_nRGB = pool(self.layerlist[5-phase](conved_nRGB))
 
         output = interpolation(alpha, downsampled_nRGB, conved_nRGB)
         for layer in self.layerlist[7-phase:]:
