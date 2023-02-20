@@ -2,7 +2,7 @@ import torch
 from torch.optim import Adam
 from torch.utils.data import DataLoader
 from torchvision.datasets import ImageFolder
-from torchvision.utils import save_image
+from torchvision.utils import save_image, make_grid
 
 from generator import Generator
 from discriminator import Discriminator
@@ -83,6 +83,7 @@ if __name__ == "__main__":
                 torch.save(model_state, cg.model_checkpoint)
                 # save image
                 gen_image = fake * 0.5 + 0.5
+                gen_image = make_grid(gen_image, nrow=2)
                 save_image(gen_image, cg.sample_root / f"{index}.jpg")
 
             # update alpha
